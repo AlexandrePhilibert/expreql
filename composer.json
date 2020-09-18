@@ -1,0 +1,13 @@
+{
+    "name": "expreql/expreql",
+    "description": "A small ORM and query builder for PHP inspired by Node.js Sequelize",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexandre Philibert",
+            "email": "alexandre.philibert@cpnv.ch"
+        }
+    ],
+    "require": {}
+}
