@@ -9,5 +9,10 @@
             "email": "alexandre.philibert@cpnv.ch"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Expreql\\Expreql\\": "src/"
+        }
+    }
 }
