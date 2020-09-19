@@ -1,5 +1,7 @@
 <?php
 
+namespace Expreql;
+
 abstract class QueryType
 {
     const SELECT = 0;

@@ -1,6 +1,9 @@
 <?php
 
-require 'query_builder.php';
+namespace Expreql;
+
+use Expreql\QueryBuilder\QueryBuilder;
+
 
 abstract class Model
 {
