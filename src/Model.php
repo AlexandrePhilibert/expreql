@@ -1,9 +1,8 @@
 <?php
 
-namespace Expreql;
+namespace Expreql\Expreql;
 
-use Expreql\QueryBuilder\QueryBuilder;
-
+use PDO;
 
 abstract class Model
 {

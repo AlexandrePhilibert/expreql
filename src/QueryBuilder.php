@@ -1,6 +1,10 @@
 <?php
 
-namespace Expreql;
+namespace Expreql\Expreql;
+
+use Exception;
+use PDO;
+use ReflectionClass;
 
 abstract class QueryType
 {
