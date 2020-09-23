@@ -3,3 +3,6 @@ vendor
 composer.lock
 
 .vscode
+
+# Config file for the database
+config.ini
