@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 class QueryBuilderTest extends TestCase
 {
 
-    private $query_builder;
+    private $pdo;
 
     protected function setUp(): void
     {
@@ -22,22 +22,38 @@ class QueryBuilderTest extends TestCase
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_CLASS,
             PDO::ATTR_EMULATE_PREPARES   => true,
         ];
-        $pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
-        $this->query_builder = new QueryBuilder(QueryType::INSERT, $pdo);
+        $this->pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
     }
 
     public function testBasicInsert()
     {
-        $this->query_builder->table('books');
-        $this->query_builder->fields([
+        $query_builder = new QueryBuilder(QueryType::INSERT, $this->pdo);
+        $query_builder->table('books');
+        $query_builder->fields([
             'title' => "Harry Potter and the Philosopher's Stone",
             'isbn' => '0-7475-3269-9',
         ]);
-        $this->query_builder->build();
+        $query_builder->build();
 
         $this->assertEquals(
             'INSERT INTO `books` (`title`, `isbn`) VALUES (?,?)',
-            $this->query_builder->statement->queryString
+            $query_builder->statement->queryString
+        );
+    }
+
+    public function testBasicSelect() {
+        $query_builder = new QueryBuilder(QueryType::SELECT, $this->pdo);
+        $query_builder->table('furnitures');
+        $query_builder->fields([
+            'name',
+            'price',
+            'dimensions',
+        ]);
+        $query_builder->build();
+
+        $this->assertEquals(
+            'SELECT furnitures.name, furnitures.price, furnitures.dimensions FROM furnitures',
+            $query_builder->statement->queryString
         );
     }
 }
