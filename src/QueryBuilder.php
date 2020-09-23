@@ -165,20 +165,7 @@ class QueryBuilder
      */
     public function execute()
     {
-        switch ($this->query_type) {
-            case QueryType::SELECT:
-                $this->handle_select_building();
-                break;
-            case QueryType::INSERT:
-                $this->handle_insert_building();
-                break;
-            case QueryType::UPDATE:
-                $this->handle_update_building();
-                break;
-            case QueryType::DELETE:
-                $this->handle_delete_building();
-                break;
-        }
+        $this->build();
 
         if (isset($this->values)) {
             $this->statement->execute($this->values);
@@ -198,6 +185,31 @@ class QueryBuilder
         return $this->statement->fetchAll(PDO::FETCH_CLASS);
     }
 
+    /**
+     * Build the query into a PDOStatment that is ready for execution
+     * 
+     * @return QueryBuilder
+     */
+    public function build()
+    {
+        switch ($this->query_type) {
+            case QueryType::SELECT:
+                $this->handle_select_building();
+                break;
+            case QueryType::INSERT:
+                $this->handle_insert_building();
+                break;
+            case QueryType::UPDATE:
+                $this->handle_update_building();
+                break;
+            case QueryType::DELETE:
+                $this->handle_delete_building();
+                break;
+        }
+
+        return $this;
+    }
+
     private function handle_select_building()
     {
         $table = $this->table;
@@ -209,9 +221,9 @@ class QueryBuilder
                 // Handle the fields, they could be a function call
                 if (is_array($field)) {
                     $query .= " " . $field[0] . "(" . $field[1] . ")";
-                    
+
                     if (isset($field[2])) {
-                        $query .= " AS ". $field[2];
+                        $query .= " AS " . $field[2];
                     }
 
                     $query .= ',';
@@ -234,7 +246,7 @@ class QueryBuilder
 
         if (isset($this->where)) {
             $key = key($this->where);
-            $query .= " WHERE $key ='" . $this->where[$key] ."'";
+            $query .= " WHERE $key ='" . $this->where[$key] . "'";
         }
 
         if (isset($this->order_by)) {
