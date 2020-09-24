@@ -56,4 +56,24 @@ class QueryBuilderTest extends TestCase
             $query_builder->statement->queryString
         );
     }
+
+    public function testSelectMultipleWhere() {
+        $query_builder = new QueryBuilder(QueryType::SELECT, $this->pdo);
+        $query_builder->table('furnitures');
+        $query_builder->fields([
+            'name',
+            'price',
+            'dimensions',
+        ]);
+        $query_builder->where([
+            ['id', 12],
+            ['price', '<=', 50]
+        ]);
+        $query_builder->build();
+
+        $this->assertEquals(
+            'SELECT furnitures.name, furnitures.price, furnitures.dimensions FROM furnitures WHERE id = ? AND price <= ?',
+            $query_builder->statement->queryString
+        );
+    }
 }
