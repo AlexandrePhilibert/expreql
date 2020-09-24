@@ -288,32 +288,22 @@ class QueryBuilder
      * @return string
      */
     private function handle_where_building(): string
-    {        
+    {
         // We either set a single condition such as : where('id', 12) or 
         // where('quantity', '<', 20)
-        $key = key($this->where);
-        if (is_string($key)) {
-            $length = count($this->where);
-            
-            // Check whether or not an operator was specified, defaults to `=`
-            if ($length == 1) {
-                $this->values[] = $this->where[$key];
-                return " WHERE $key = ?";
-            } else if ($length == 3) {
-                $this->values[] = $this->where[2];
-                return " WHERE " . $this->where[0] . " " . $this->where[1] . " ?";
-            } else {
-                throw new Exception('Invalid where syntax');
-            }
+        $length = count($this->where);
+        if ($length == 1) {
+            $key = key($this->where);
+            $this->values[] = $this->where[$key];
+            return " WHERE $key = ?";
         }
 
         $where = ' WHERE ';
 
         // We have multiple conditions (arrays)
-        foreach ($this->where as $condition) {
+        foreach ($this->where as $index => $condition) {
             $length = count($condition);
 
-            // Check whether or not an operator was specified, defaults to `=`
             if ($length == 2) {
                 $where .= $condition[0] . " = ? AND ";
                 $this->values[] = $condition[1];
@@ -376,20 +366,18 @@ class QueryBuilder
     {
         $table = $this->table;
         $query = "UPDATE $table SET";
-        $values = [];
 
         foreach ($this->fields as $key => $value) {
-            $values[] = $value;
+            $this->values[] = $value;
             $query .=  " $key = ?,";
         }
 
-        $query = substr($query, 0, count($query) - 2);
+        $query = substr($query, 0, strlen($query) - 1);
 
         if (isset($this->where)) {
             $query .= $this->handle_where_building();
         }
 
-        $this->values = $values;
         $this->statement = $this->pdo->prepare($query);
     }
 
