@@ -286,20 +286,22 @@ class QueryBuilder
      * @return string
      */
     private function handle_where_building(): string
-    {
+    {        
         // We either set a single condition such as : where('id', 12) or 
         // where('quantity', '<', 20)
-        if (is_string($this->where[0])) {
+        $key = key($this->where);
+        if (is_string($key)) {
             $length = count($this->where);
             
             // Check whether or not an operator was specified, defaults to `=`
-            if ($length == 2) {
-                $key = key($this->where);
-                $values[] = $this->where[$key];
+            if ($length == 1) {
+                $this->values[] = $this->where[$key];
                 return " WHERE $key = ?";
             } else if ($length == 3) {
-                $values[] = $this->where[2];
+                $this->values[] = $this->where[2];
                 return " WHERE " . $this->where[0] . " " . $this->where[1] . " ?";
+            } else {
+                throw new Exception('Invalid where syntax');
             }
         }
 
@@ -312,10 +314,10 @@ class QueryBuilder
             // Check whether or not an operator was specified, defaults to `=`
             if ($length == 2) {
                 $where .= $condition[0] . " = ? AND ";
-                $values[] = $condition[1];
+                $this->values[] = $condition[1];
             } else if ($length == 3) {
                 $where .= $condition[0] . " " . $condition[1] . " ? AND ";
-                $values[] = $condition[2];
+                $this->values[] = $condition[2];
             }
         }
         // Remove trailing `AND` operator
