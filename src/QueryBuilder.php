@@ -31,6 +31,10 @@ class QueryBuilder
 
     private $order_by;
 
+    private $limit;
+
+    private $offset;
+
     private $has_many;
 
     private $has_one;
@@ -100,6 +104,30 @@ class QueryBuilder
             default:
                 throw new Exception("order by keyword not supported");
         }
+
+        return $this;
+    }
+
+    /**
+     * @param int $number
+     * 
+     * @return QueryBuilder
+     */
+    public function limit(int $number): QueryBuilder
+    {
+        $this->limit = $number;
+
+        return $this;
+    }
+
+    /**
+     * @param int $number
+     * 
+     * @return QueryBuilder
+     */
+    public function offset(int $number): QueryBuilder
+    {
+        $this->offset = $number;
 
         return $this;
     }
@@ -277,6 +305,14 @@ class QueryBuilder
 
         if (isset($this->group_by)) {
             $query .= " GROUP BY " . $this->group_by;
+        }
+
+        if (isset($this->limit)) {
+            $query .= " LIMIT " . $this->limit;
+        }
+
+        if (isset($this->offset)) {
+            $query .= " OFFSET " . $this->offset;
         }
 
         $this->statement = $this->pdo->prepare($query);
