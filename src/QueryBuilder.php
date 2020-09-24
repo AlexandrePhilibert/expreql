@@ -59,9 +59,29 @@ class QueryBuilder
         return $this;
     }
 
-    public function where(string $field, $value)
+    /**
+     * @param array ...$args
+     * 
+     * @return QueryBuilder
+     */
+    public function where(...$args)
     {
-        $this->where = [$field => $value];
+        $length = count($args);
+
+        if ($length == 1) {
+            if (!is_array($args)) {
+                throw new Exception('Invalid where syntax, argument must be an array');
+            }
+            $this->where = $args[0];
+        } else if ($length == 2) {
+            // E.g. where('price', 20);
+            $this->where = [$args[0] => $args[1]];
+        } else if ($length == 3) {
+            // E.g. where('price', '<', 20);
+            $this->where = $args;
+        } else {
+            throw new Exception('Unsupported number of arguments');
+        }
 
         return $this;
     }
@@ -245,8 +265,7 @@ class QueryBuilder
         }
 
         if (isset($this->where)) {
-            $key = key($this->where);
-            $query .= " WHERE $key ='" . $this->where[$key] . "'";
+            $query .= $this->handle_where_building();
         }
 
         if (isset($this->order_by)) {
@@ -259,6 +278,50 @@ class QueryBuilder
         }
 
         $this->statement = $this->pdo->prepare($query);
+    }
+
+    /**
+     * TODO(alexandre): This only supports `AND` operators for the time being... 
+     * 
+     * @return string
+     */
+    private function handle_where_building(): string
+    {
+        // We either set a single condition such as : where('id', 12) or 
+        // where('quantity', '<', 20)
+        if (is_string($this->where[0])) {
+            $length = count($this->where);
+            
+            // Check whether or not an operator was specified, defaults to `=`
+            if ($length == 2) {
+                $key = key($this->where);
+                $values[] = $this->where[$key];
+                return " WHERE $key = ?";
+            } else if ($length == 3) {
+                $values[] = $this->where[2];
+                return " WHERE " . $this->where[0] . " " . $this->where[1] . " ?";
+            }
+        }
+
+        $where = ' WHERE ';
+
+        // We have multiple conditions (arrays)
+        foreach ($this->where as $condition) {
+            $length = count($condition);
+
+            // Check whether or not an operator was specified, defaults to `=`
+            if ($length == 2) {
+                $where .= $condition[0] . " = ? AND ";
+                $values[] = $condition[1];
+            } else if ($length == 3) {
+                $where .= $condition[0] . " " . $condition[1] . " ? AND ";
+                $values[] = $condition[2];
+            }
+        }
+        // Remove trailing `AND` operator
+        $where = substr($where, 0, strlen($where) - 5);
+
+        return $where;
     }
 
     private function handle_join_building()
@@ -319,9 +382,7 @@ class QueryBuilder
         $query = substr($query, 0, count($query) - 2);
 
         if (isset($this->where)) {
-            $key = key($this->where);
-            $query .= " WHERE $key = ?";
-            $values[] = $this->where[$key];
+            $query .= $this->handle_where_building();
         }
 
         $this->values = $values;
@@ -334,13 +395,9 @@ class QueryBuilder
         $query = "DELETE FROM $table";
         $values = [];
 
-        if (!isset($this->where)) {
-            throw new Exception("delete needs a where clause");
+        if (isset($this->where)) {
+            $query .= $this->handle_where_building();
         }
-
-        $key = key($this->where);
-        $query .= " WHERE $key = ?";
-        $values[] = $this->where[$key];
 
         $this->values = $values;
         $this->statement = $this->pdo->prepare($query);
