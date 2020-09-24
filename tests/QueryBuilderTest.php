@@ -76,4 +76,28 @@ class QueryBuilderTest extends TestCase
             $query_builder->statement->queryString
         );
     }
+
+    public function testSelectLimit() {
+        $query_builder = new QueryBuilder(QueryType::SELECT, $this->pdo);
+        $query_builder->table('furnitures');
+        $query_builder->limit(100);
+        $query_builder->build();
+
+        $this->assertEquals(
+            'SELECT * FROM furnitures LIMIT 100',
+            $query_builder->statement->queryString
+        );
+    }
+
+    public function testSelectOffset() {
+        $query_builder = new QueryBuilder(QueryType::SELECT, $this->pdo);
+        $query_builder->table('furnitures');
+        $query_builder->offset(100);
+        $query_builder->build();
+
+        $this->assertEquals(
+            'SELECT * FROM furnitures OFFSET 100',
+            $query_builder->statement->queryString
+        );
+    }
 }
