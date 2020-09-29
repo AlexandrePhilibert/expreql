@@ -70,7 +70,7 @@ abstract class Model implements Queryable
 		return $query_builder->execute();
 	}
 
-	public static function select(?array $fields)
+	public static function select(array $fields = null)
 	{
 		$query_builder = new QueryBuilder(QueryType::SELECT, static::$pdo);
 		$query_builder->table(static::$table);

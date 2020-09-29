@@ -11,7 +11,7 @@ interface Queryable
     /**
      * @param array|null $fields
      */
-    public static function select(?array $fields);
+    public static function select(array $fields = null);
 
     /**
      * @param array $fields
