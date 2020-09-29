@@ -462,13 +462,11 @@ class QueryBuilder
     {
         $table = $this->table;
         $query = "DELETE FROM $table";
-        $values = [];
 
         if (isset($this->where)) {
             $query .= $this->handle_where_building();
         }
 
-        $this->values = $values;
         $this->statement = $this->pdo->prepare($query);
     }
 }
