@@ -14,6 +14,12 @@ abstract class QueryType
     const DELETE = 3;
 }
 
+abstract class Op
+{
+    const or = 'OR';
+    const and = 'AND';
+}
+
 class QueryBuilder
 {
 
@@ -72,19 +78,45 @@ class QueryBuilder
     {
         $length = count($args);
 
-        if ($length == 1) {
-            if (!is_array($args)) {
-                throw new Exception('Invalid where syntax, argument must be an array');
-            }
-            $this->where = $args[0];
-        } else if ($length == 2) {
-            // E.g. where('price', 20);
-            $this->where = [$args[0] => $args[1]];
-        } else if ($length == 3) {
-            // E.g. where('price', '<', 20);
-            $this->where = $args;
-        } else {
-            throw new Exception('Unsupported number of arguments');
+        switch ($length) {
+            case 1:
+                if (!is_array($args)) {
+                    throw new Exception('Invalid where syntax, argument must be an array');
+                }
+                $this->where[] = [Op::and, $args[0]];
+                break;
+            case 2:
+            case 3:
+                // Single clause e.g. where('price', 20) or ('price', '<', 50)
+                $this->where[] = [Op::and, [$args]];
+                break;
+            default:
+                throw new Exception('Unsupported number of arguments');
+                break;
+        }
+
+        return $this;
+    }
+
+    public function where_or(...$args): QueryBuilder
+    {
+        $length = count($args);
+
+        switch ($length) {
+            case 1:
+                if (!is_array($args)) {
+                    throw new Exception('Invalid where syntax, argument must be an array');
+                }
+                $this->where[] = [Op::or, $args[0]];
+                break;
+            case 2:
+            case 3:
+                // Single clause e.g. where('price', 20) or ('price', '<', 50)
+                $this->where[] = [Op::or, [$args]];
+                break;
+            default:
+                throw new Exception('Unsupported number of arguments');
+                break;
         }
 
         return $this;
@@ -319,37 +351,46 @@ class QueryBuilder
     }
 
     /**
-     * TODO(alexandre): This only supports `AND` operators for the time being... 
+     * TODO(alexandre): Should we validate the operator used inside conditions ?
      * 
      * @return string
      */
     private function handle_where_building(): string
     {
-        // We either set a single condition such as : where('id', 12) or 
-        // where('quantity', '<', 20)
-        $length = count($this->where);
-        if ($length == 1) {
-            $key = key($this->where);
-            $this->values[] = $this->where[$key];
-            return " WHERE $key = ?";
-        }
-
+        $nb_clauses = count($this->where);
         $where = ' WHERE ';
 
-        // We have multiple conditions (arrays)
-        foreach ($this->where as $index => $condition) {
-            $length = count($condition);
-
-            if ($length == 2) {
-                $where .= $condition[0] . " = ? AND ";
-                $this->values[] = $condition[1];
-            } else if ($length == 3) {
-                $where .= $condition[0] . " " . $condition[1] . " ? AND ";
-                $this->values[] = $condition[2];
+        // A segment is an array of conditions with the first index being the 
+        // operator joining two clauses such as `Op::and` or `Op::or`
+        foreach ($this->where as $segment) {
+            $nb_conditions = count($segment[1]);
+            if ($nb_conditions > 1 && $nb_clauses > 1) {
+                $where .= "(";
             }
+
+            foreach ($segment[1] as $condition) {
+                $length = count($condition);
+                if ($length == 2) {
+                    // The condition has no operator in it, default to `=`
+                    $where .= $condition[0] . " = ? " . $segment[0] . " ";
+                    $this->values[] = $condition[1];
+                } else if ($length == 3) {
+                    // The condition has an operator, use the one specified
+                    $where .= $condition[0] . " " . $condition[1] . " ? " . $segment[0] . " ";
+                    $this->values[] = $condition[2];
+                }
+            }
+            // Remove trailing operator
+            $where = substr($where, 0, strlen($where) - strlen($segment[0]) - 2);
+
+            if ($nb_conditions > 1 && $nb_clauses > 1) {
+                $where .= ")";
+            }
+
+            $where .= " " . $segment[0] . " ";
         }
-        // Remove trailing `AND` operator
-        $where = substr($where, 0, strlen($where) - 5);
+        // Remove trailing operator
+        $where = substr($where, 0, strlen($where) - strlen($segment[0]) - 2);
 
         return $where;
     }
