@@ -100,4 +100,20 @@ class QueryBuilderTest extends TestCase
             $query_builder->statement->queryString
         );
     }
+
+    public function testMultipleWhere() {
+        $query_builder = new QueryBuilder(QueryType::SELECT, $this->pdo);
+        $query_builder->table('furnitures');
+        $query_builder->where('price', '<=', 50);
+        $query_builder->where_or([
+            ['availability', 'in_stock'],
+            ['availability', 'ordered'],
+        ]);
+        $query_builder->build();
+
+        $this->assertEquals(
+            "SELECT * FROM furnitures WHERE price <= ? AND (availability = ? OR availability = ?)",
+            $query_builder->statement->queryString
+        );
+    }
 }
