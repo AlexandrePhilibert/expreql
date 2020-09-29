@@ -262,6 +262,8 @@ class QueryBuilder
 
                 $stmt->execute([$this->pdo->lastInsertID()]);
                 return $stmt->fetchAll(PDO::FETCH_CLASS);
+            case QueryType::DELETE:
+                return  $this->statement->rowCount();
             default:
                 return $this->statement->fetchAll(PDO::FETCH_CLASS);
         }
