@@ -21,33 +21,6 @@ abstract class Model implements Queryable
 	 */
 	protected static $table;
 
-	/**
-	 * @param array $config Contains the config for PDO
-	 *    $config = [
-	 *      'host' => (string),
-	 *      'db' => (string),
-	 *      'charset' => (string),
-	 *      'user' => (string),
-	 *      'pass' => (string)
-	 *    ]
-	 */
-	public static function set_config(array $config)
-	{
-		$host = $config['host'];
-		$db = $config['db'];
-		$charset = $config['charset'];
-		$user = $config['user'];
-		$pass = $config['pass'];
-		$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-		$options = [
-			PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-			PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_CLASS,
-			PDO::ATTR_EMULATE_PREPARES   => true,
-		];
-
-		self::$pdo = new PDO($dsn, $user, $pass, $options);
-	}
-
 	private function __construct()
 	{
 	}
