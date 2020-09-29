@@ -4,7 +4,7 @@ namespace Expreql\Expreql;
 
 use PDO;
 
-abstract class Model
+abstract class Model implements Queryable
 {
 
 	/**
@@ -70,7 +70,7 @@ abstract class Model
 		return $query_builder->execute();
 	}
 
-	public static function select(array $fields = null)
+	public static function select(?array $fields)
 	{
 		$query_builder = new QueryBuilder(QueryType::SELECT, static::$pdo);
 		$query_builder->table(static::$table);
