@@ -287,6 +287,8 @@ class QueryBuilder
                 $fetch_result = $this->statement->fetchAll(PDO::FETCH_NAMED);
                 $model_results = [];
 
+                print_r($fetch_result);
+
                 // The first object is always an instance of the base model
                 $is_base_model = true;
 
@@ -323,7 +325,7 @@ class QueryBuilder
                             }
                             // FIXME: This skips the assignment of the current
                             // value to the property of the first joined object
-                            for ($i = 0; $i < count($value); $i++) {
+                            for (; $i < count($value); $i++) {
                                 if (in_array($key, $this->model::$fields)) {
                                     $model->$key = $value[$i];
                                     break;
