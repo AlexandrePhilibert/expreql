@@ -287,8 +287,6 @@ class QueryBuilder
                 $fetch_result = $this->statement->fetchAll(PDO::FETCH_NAMED);
                 $model_results = [];
 
-                print_r($fetch_result);
-
                 // The first object is always an instance of the base model
                 $is_base_model = true;
 

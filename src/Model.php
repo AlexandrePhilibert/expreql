@@ -2,17 +2,8 @@
 
 namespace Expreql\Expreql;
 
-use PDO;
-
 abstract class Model implements Queryable
 {
-
-	/**
-	 * @var PDO
-	 * 
-	 * The PDO instance
-	 */
-	public static $pdo;
 
 	/**
 	 * Register the table columns name
@@ -38,6 +29,18 @@ abstract class Model implements Queryable
 	protected static function has_one()
 	{
 		return [];
+	}
+
+	/**
+	 * This function can be used to avoid name collisions on tables columns.
+	 * 
+	 * @param string $field The field of the model colliding
+	 * 
+	 * @return string
+	 */
+	public static function field(string $field): string
+	{
+		return static::$table . "." . $field;
 	}
 
 	public static function insert(array $fields)
