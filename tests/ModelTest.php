@@ -7,6 +7,7 @@ use Expreql\Expreql\Database;
 
 use PHPUnit\Framework\TestCase;
 
+use function PHPUnit\Framework\assertEquals;
 use function PHPUnit\Framework\assertNotNull;
 
 class Exercise extends Model
@@ -65,6 +66,11 @@ class ModelTest extends TestCase
         $exercises = Exercise::select()->execute();
 
         assertNotNull($exercises);
+    }
+
+    public function testGetFieldWithTableName()
+    {
+        assertEquals('exercises.title', Exercise::field('title'));
     }
 
     public function testJoinMany()
