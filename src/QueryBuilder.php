@@ -278,101 +278,76 @@ class QueryBuilder
                 return $stmt->fetchAll(PDO::FETCH_CLASS);
             case QueryType::DELETE:
                 return  $this->statement->rowCount();
-            default:
-                // TODO: Rewrite all this thing....
-                // TODO: We should handle the base model first, then iterate 
-                // TODO: over the rows to create the join models
-
+            case QueryType::SELECT:
                 // Here we are mapping the result from fetch to a Model
                 $fetch_result = $this->statement->fetchAll(PDO::FETCH_NAMED);
                 $model_results = [];
 
-                // The first object is always an instance of the base model
-                $is_base_model = true;
-
+                // Create all base models
                 foreach ($fetch_result as $row) {
-                    if (isset($this->join)) {
-                        // We set the base model to true if we have an existing
-                        // model instance with the primary key matching the current
-                        // row. This means we have executed a join
-                        foreach ($model_results as $model_instance) {
-                            $primary_key = $this->model::$primary_key;
-                            if ($model_instance->$primary_key === $row[$primary_key]) {
-                                $is_base_model = true;
-                            }
+
+                    // We can skip this row if we already have a base instance
+                    foreach ($model_results as $model_instance) {
+                        if ($model_instance == $row[$this->model::$primary_key]) {
+                            continue 2;
                         }
-                    } else {
-                        $is_base_model = true;
                     }
 
-                    // We create an instance of the queried object to return
-                    if ($is_base_model) {
-                        $model = new $this->model();
-                    } else {
-                        $model = new $this->join();
-                    }
+                    $model = new $this->model();
 
-                    foreach ($row as $key => $value) {
-                        // If we have a name collision PDO returns an array
-                        if (is_array($value)) {
-                            // Skip the first element as it is the base model
-                            if ($is_base_model) {
-                                $i = 0;
-                            } else {
-                                $i = 1;
-                            }
-                            // FIXME: This skips the assignment of the current
-                            // value to the property of the first joined object
-                            for (; $i < count($value); $i++) {
-                                if (in_array($key, $this->model::$fields)) {
-                                    $model->$key = $value[$i];
-                                    break;
-                                }
-                            }
+                    foreach ($row as $column_key => $column_value) {
+                        if (!in_array($column_key, $this->model::$fields)) {
+                            continue;
+                        }
+
+                        if (is_array($column_value)) {
+                            // The base model is always index 0 on collisions
+                            $model->$column_key = $column_value[0];
                         } else {
-                            if ($is_base_model && in_array($key, $this->model::$fields)) {
-                                // FIXME: This could overwrite model property.
-                                $model->$key = $value;
-                            } else if ($is_base_model) {
-                                // we create a new property on the object to
-                                // hold the join instance
-                                $join_table_name = $this->join::$table;
-                                if (isset($model->$join_table_name)) {
-                                    // If the instance already exists
-                                    end($model->$join_table_name)->$key = $value;
-                                } else {
-                                    $join_model = new $this->join();
-                                    $model->$join_table_name[] = $join_model;
-                                    $join_model->$key = $value;
-                                }
-                            } else if (in_array($key, $this->join::$fields)) {
-                                $model->$key = $value;
-                            }
+                            $model->$column_key = $column_value;
                         }
                     }
 
-                    // When we are on the base model we append directly to the results
-                    if ($is_base_model) {
-                        $model_results[] = $model;
-                    } else {
-                        // Here we have to append to the child of the model 
-                        // corresponding to the current primary key
-                        $join_table_name = $this->join::$table;
-
-                        foreach ($model_results as $model_instance) {
-                            $primary_key = $this->model::$primary_key;
-                            if ($model_instance->$primary_key == $row[$primary_key][0]) {
-                                $model_instance->$join_table_name[] = $model;
-                                break;
-                            }
-                        }
-                    }
-
-                    // reset the base model as we now have at least a single
-                    // model_result
-                    $is_base_model = false;
+                    $model_results[] = $model;
                 }
 
+                if (!isset($this->join)) {
+                    // We can return what we got as there are no join to perform
+                    return $model_results;
+                }
+
+                // Get the foregin key to map the base model primary key to
+                // the join model foreign key
+                $foreign_key = $this->model::has_many()[$this->join];
+                $primary_key = $this->model::$primary_key;
+                $join_table_name = $this->join::$table;
+
+                // Iterate a second time, this time creating joined models
+                foreach ($fetch_result as $row) {
+                    // Find the base model to which we will be adding joined object
+                    foreach ($model_results as $model_instance) {
+                        if ($model_instance->$primary_key == $row[$foreign_key]) {
+                            $base_model = $model_instance;
+                            break;
+                        }
+                    }
+
+                    $join_model = new $this->join();
+
+                    foreach ($row as $column_key => $column_value) {
+                        if (!in_array($column_key, $this->join::$fields)) {
+                            continue;
+                        }
+                        if (is_array($column_value)) {
+                            // TODO: Index is not always 1
+                            $join_model->$column_key = $column_value[1];
+                        } else {
+                            $join_model->$column_key = $column_value;
+                        }
+                    }
+
+                    $base_model->$join_table_name[] = $join_model;
+                }
                 return $model_results;
         }
     }

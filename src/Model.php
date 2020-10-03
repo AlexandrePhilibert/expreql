@@ -19,14 +19,14 @@ abstract class Model implements Queryable
 	 * 
 	 * The name of the database table which the model represents
 	 */
-	protected static $table;
+	public static $table;
 
-	protected static function has_many()
+	public static function has_many()
 	{
 		return [];
 	}
 
-	protected static function has_one()
+	public static function has_one()
 	{
 		return [];
 	}

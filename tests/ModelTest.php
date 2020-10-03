@@ -22,7 +22,7 @@ class Exercise extends Model
         'state',
     ];
 
-    protected static function has_many()
+    public static function has_many()
     {
         return [
             Question::class => 'exercises_id'
@@ -43,7 +43,7 @@ class Question extends Model
         'exercises_id',
     ];
 
-    protected static function has_one()
+    public static function has_one()
     {
         return [
             Exercise::class
@@ -77,8 +77,6 @@ class ModelTest extends TestCase
     {
         $exercise_with_question = Exercise::select()->join(Question::class)
             ->where('exercises.id', 1)->execute();
-
-        print_r($exercise_with_question);
 
         assertNotNull($exercise_with_question);
     }
