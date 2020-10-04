@@ -52,7 +52,7 @@ class QueryBuilderTest extends TestCase
         $query_builder->build();
 
         $this->assertEquals(
-            'SELECT furnitures.name, furnitures.price, furnitures.dimensions FROM furnitures',
+            'SELECT name, price, dimensions FROM furnitures',
             $query_builder->statement->queryString
         );
     }
@@ -72,7 +72,7 @@ class QueryBuilderTest extends TestCase
         $query_builder->build();
 
         $this->assertEquals(
-            'SELECT furnitures.name, furnitures.price, furnitures.dimensions FROM furnitures WHERE id = ? AND price <= ?',
+            'SELECT name, price, dimensions FROM furnitures WHERE id = ? AND price <= ?',
             $query_builder->statement->queryString
         );
     }
