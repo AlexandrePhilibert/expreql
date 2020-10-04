@@ -8,6 +8,7 @@ use Expreql\Expreql\Database;
 use PHPUnit\Framework\TestCase;
 
 use function PHPUnit\Framework\assertEquals;
+use function PHPUnit\Framework\assertIsInt;
 use function PHPUnit\Framework\assertNotNull;
 
 class Exercise extends Model
@@ -79,5 +80,20 @@ class ModelTest extends TestCase
             ->where('exercises.id', 1)->execute();
 
         assertNotNull($exercise_with_question);
+    }
+
+    public function testCountExercises()
+    {
+        $exercises = Exercise::select()->execute();
+
+        assertIsInt($exercises->count());
+    }
+
+    public function testCountExerciseQuestions()
+    {
+        $exercise = Exercise::select()->where(Exercise::field('id'), 1)
+            ->join(Question::class)->execute();
+
+        assertIsInt($exercise[0]->questions->count());
     }
 }
