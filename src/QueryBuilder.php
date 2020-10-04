@@ -281,13 +281,13 @@ class QueryBuilder
             case QueryType::SELECT:
                 // Here we are mapping the result from fetch to a Model
                 $fetch_result = $this->statement->fetchAll(PDO::FETCH_NAMED);
-                $model_results = [];
+                $query_result = new QueryResult();
 
                 // Create all base models
                 foreach ($fetch_result as $row) {
 
                     // We can skip this row if we already have a base instance
-                    foreach ($model_results as $model_instance) {
+                    foreach ($query_result as $model_instance) {
                         if ($model_instance == $row[$this->model::$primary_key]) {
                             continue 2;
                         }
@@ -308,12 +308,12 @@ class QueryBuilder
                         }
                     }
 
-                    $model_results[] = $model;
+                    $query_result->append($model);
                 }
 
                 if (!isset($this->join)) {
                     // We can return what we got as there are no join to perform
-                    return $model_results;
+                    return $query_result;
                 }
 
                 // Get the foregin key to map the base model primary key to
@@ -325,7 +325,7 @@ class QueryBuilder
                 // Iterate a second time, this time creating joined models
                 foreach ($fetch_result as $row) {
                     // Find the base model to which we will be adding joined object
-                    foreach ($model_results as $model_instance) {
+                    foreach ($query_result as $model_instance) {
                         if ($model_instance->$primary_key == $row[$foreign_key]) {
                             $base_model = $model_instance;
                             break;
@@ -348,7 +348,7 @@ class QueryBuilder
 
                     $base_model->$join_table_name[] = $join_model;
                 }
-                return $model_results;
+                return $query_result;
         }
     }
 
