@@ -331,6 +331,23 @@ class QueryBuilder
 
                 // Iterate a second time, this time creating joined models
                 foreach ($fetch_result as $row) {
+                    if (!isset($row[$foreign_key])) {
+                        // We have not joined any rows, create empty QueryResult
+                        // property on each object in order to not have null value
+                        foreach ($query_result as $model_instance) {
+                            if (is_array($row[$primary_key])) {
+                                $row_primary_key = $row[$primary_key][0];
+                            } else {
+                                $row_primary_key = $row[$primary_key];
+                            }
+                            if ($model_instance->$primary_key == $row_primary_key) {
+                                $join_query_result = new QueryResult();
+                                $model_instance->$join_table_name = $join_query_result;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
                     // Find the base model to which we will be adding joined object
                     foreach ($query_result as $model_instance) {
                         if ($model_instance->$primary_key == $row[$foreign_key]) {
@@ -363,6 +380,7 @@ class QueryBuilder
                         $base_model->$join_table_name = $join_query_result;
                     }
                 }
+
                 return $query_result;
         }
     }
@@ -410,7 +428,7 @@ class QueryBuilder
 
                     $query .= ',';
                 } else {
-                    $query .= " $table.$field,";
+                    $query .= " $field,";
                 }
             }
 
