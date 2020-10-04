@@ -96,4 +96,11 @@ class ModelTest extends TestCase
 
         assertIsInt($exercise[0]->questions->count());
     }
+
+    public function testFindExercise()
+    {
+        $exercise = Exercise::find(1)->execute();
+
+        assertEquals($exercise->id, 1);
+    }
 }
