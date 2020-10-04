@@ -346,7 +346,16 @@ class QueryBuilder
                         }
                     }
 
-                    $base_model->$join_table_name[] = $join_model;
+                    // Joined models should also be a QueryResult in order to
+                    // perform methods on them
+                    if (isset($base_model->$join_table_name)) {
+                        $base_model->$join_table_name->append($join_model);
+                    } else {
+                        $join_query_result = new QueryResult();
+                        $join_query_result->append($join_model);
+                        $base_model->$join_table_name = $join_query_result;
+                    }
+
                 }
                 return $query_result;
         }
