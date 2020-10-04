@@ -255,7 +255,7 @@ class QueryBuilder
     /**
      * Call this function to execute built queries
      * 
-     * @return array Records from the request that was built
+     * @return ArrayObject|int Records from the request that was built
      */
     public function execute()
     {
@@ -288,7 +288,14 @@ class QueryBuilder
 
                     // We can skip this row if we already have a base instance
                     foreach ($query_result as $model_instance) {
-                        if ($model_instance == $row[$this->model::$primary_key]) {
+                        $primary_key = $this->model::$primary_key;
+                        if (
+                            is_array($row[$primary_key]) &&
+                            in_array($model_instance->$primary_key, $row[$primary_key])
+                        ) {
+                            continue 2;
+                        }
+                        if ($model_instance->$primary_key == $row[$primary_key]) {
                             continue 2;
                         }
                     }
@@ -355,7 +362,6 @@ class QueryBuilder
                         $join_query_result->append($join_model);
                         $base_model->$join_table_name = $join_query_result;
                     }
-
                 }
                 return $query_result;
         }
