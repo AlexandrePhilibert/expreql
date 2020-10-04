@@ -21,6 +21,11 @@ abstract class Model implements Queryable
 	 */
 	public static $table;
 
+	/**
+	 * @var string
+	 */
+	public static $primary_key;
+
 	public static function has_many()
 	{
 		return [];
@@ -59,6 +64,18 @@ abstract class Model implements Queryable
 		$query_builder->model(static::class);
 		$query_builder->table(static::$table);
 		$query_builder->fields($fields);
+		$query_builder->has_many(static::has_many());
+		$query_builder->has_one(static::has_one());
+		return $query_builder;
+	}
+
+	public static function find($value)
+	{
+		$connection = Database::get_connection();
+		$query_builder = new QueryBuilder(QueryType::SELECT, $connection);
+		$query_builder->model(static::class);
+		$query_builder->table(static::$table);
+		$query_builder->where(static::field(static::$primary_key), $value);
 		$query_builder->has_many(static::has_many());
 		$query_builder->has_one(static::has_one());
 		return $query_builder;
