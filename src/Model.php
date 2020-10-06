@@ -26,15 +26,11 @@ abstract class Model implements Queryable
 	 */
 	public static $primary_key;
 
-	public static function has_many()
-	{
-		return [];
-	}
+	public static $has_many = [];
 
-	public static function has_one()
-	{
-		return [];
-	}
+	public static $has_one = [];
+
+	public static $belongs_to = [];
 
 	/**
 	 * This function can be used to avoid name collisions on tables columns.

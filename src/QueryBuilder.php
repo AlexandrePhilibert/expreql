@@ -48,6 +48,11 @@ class QueryBuilder
 
     private $offset;
 
+    /**
+     * Contains models that are being joined on the base model
+     * 
+     * @var array
+     */
     private $join;
 
     /**
@@ -197,7 +202,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $class The fully qualified class name
+     * @param Model|array class The fully qualified class name
      * 
      * example: User::class
      * 
@@ -205,8 +210,12 @@ class QueryBuilder
      */
     public function join($class)
     {
-        $this->join = $class;
+        if (is_array($class)) {
+            $this->join = $class;
+            return $this;
+        }
 
+        $this->join = [$class];
         return $this;
     }
 
@@ -281,61 +290,69 @@ class QueryBuilder
                     return $query_result;
                 }
 
-                // Get the foregin key to map the base model primary key to
-                // the join model foreign key
-                $foreign_key = $this->model::$has_many[$this->join];
-                $primary_key = $this->model::$primary_key;
-                $join_table_name = $this->join::$table;
+                foreach ($this->join as $join_index => $join) {
+                    // Get the foregin key to map the base model primary key to
+                    // the join model foreign key
+                    $foreign_key = $this->model::$has_many[$join];
+                    $primary_key = $this->model::$primary_key;
+                    $join_table_name = $join::$table;
 
-                // Iterate a second time, this time creating joined models
-                foreach ($fetch_result as $row) {
-                    if (!isset($row[$foreign_key])) {
-                        // We have not joined any rows, create empty QueryResult
-                        // property on each object in order to not have null value
-                        foreach ($query_result as $model_instance) {
-                            if (is_array($row[$primary_key])) {
-                                $row_primary_key = $row[$primary_key][0];
-                            } else {
-                                $row_primary_key = $row[$primary_key];
+                    // Iterate a second time, this time creating joined models
+                    foreach ($fetch_result as $row) {
+                        if (!isset($row[$foreign_key])) {
+                            // We have not joined any rows, create empty QueryResult
+                            // property on each object in order to not have null value
+                            foreach ($query_result as $model_instance) {
+                                if (is_array($row[$primary_key])) {
+                                    $row_primary_key = $row[$primary_key][0];
+                                } else {
+                                    $row_primary_key = $row[$primary_key];
+                                }
+                                if ($model_instance->$primary_key == $row_primary_key) {
+                                    $join_query_result = new QueryResult();
+                                    $model_instance->$join_table_name = $join_query_result;
+                                    break;
+                                }
                             }
-                            if ($model_instance->$primary_key == $row_primary_key) {
-                                $join_query_result = new QueryResult();
-                                $model_instance->$join_table_name = $join_query_result;
+                            continue;
+                        }
+                        // Find the base model to which we will be adding joined object
+                        foreach ($query_result as $model_instance) {
+                            if (is_array($row[$foreign_key])) {
+                                // TODO: Index could be greater than 1
+                                if ($model_instance->$primary_key == $row[$foreign_key][1]) {
+                                    $base_model = $model_instance;
+                                    break;
+                                }
+                            }
+                            if ($model_instance->$primary_key == $row[$foreign_key]) {
+                                $base_model = $model_instance;
                                 break;
                             }
                         }
-                        continue;
-                    }
-                    // Find the base model to which we will be adding joined object
-                    foreach ($query_result as $model_instance) {
-                        if ($model_instance->$primary_key == $row[$foreign_key]) {
-                            $base_model = $model_instance;
-                            break;
-                        }
-                    }
 
-                    $join_model = new $this->join();
+                        $join_model = new $join();
 
-                    foreach ($row as $column_key => $column_value) {
-                        if (!in_array($column_key, $this->join::$fields)) {
-                            continue;
+                        foreach ($row as $column_key => $column_value) {
+                            if (!in_array($column_key, $join::$fields)) {
+                                continue;
+                            }
+                            if (is_array($column_value)) {
+                                $join_model->$column_key = $column_value[$join_index];
+                            } else {
+                                $join_model->$column_key = $column_value;
+                            }
                         }
-                        if (is_array($column_value)) {
-                            // TODO: Index is not always 1
-                            $join_model->$column_key = $column_value[1];
+
+                        // Joined models should also be a QueryResult in order to
+                        // perform methods on them
+                        if (isset($base_model->$join_table_name)) {
+                            $base_model->$join_table_name->append($join_model);
                         } else {
-                            $join_model->$column_key = $column_value;
+                            $join_query_result = new QueryResult();
+                            $join_query_result->append($join_model);
+                            $base_model->$join_table_name = $join_query_result;
                         }
-                    }
-
-                    // Joined models should also be a QueryResult in order to
-                    // perform methods on them
-                    if (isset($base_model->$join_table_name)) {
-                        $base_model->$join_table_name->append($join_model);
-                    } else {
-                        $join_query_result = new QueryResult();
-                        $join_query_result->append($join_model);
-                        $base_model->$join_table_name = $join_query_result;
                     }
                 }
 
@@ -474,28 +491,26 @@ class QueryBuilder
     private function handle_join_building()
     {
         $table = $this->table;
+        $join_statement = "";
 
-        $join_class = new ReflectionClass($this->join);
-        $join_table = $join_class->getStaticPropertyValue('table');
-        $join_primary_key = $join_class->getStaticPropertyValue('primary_key');
+        foreach ($this->join as $join) {
+            $join_class = new ReflectionClass($join);
+            $join_table = $join_class->getStaticPropertyValue('table');
+            $join_primary_key = $join_class->getStaticPropertyValue('primary_key');
 
-        // has many relation
-        if (array_key_exists($this->join, $this->model::$has_many)) {
-            $join_field = $this->model::$has_many[$this->join];
-            // TODO: Is there a better way to do this ?
-            return " LEFT JOIN $join_table ON $table.$join_primary_key = $join_table.$join_field";
+            if (array_key_exists($join, $this->model::$has_many)) {
+                $join_field = $this->model::$has_many[$join];
+                $join_statement .= " LEFT JOIN $join_table ON $table.$join_primary_key = $join_table.$join_field";
+            } else if (array_key_exists($join, $this->model::$has_one)) {
+                $join_field = $this->model::$primary_key;
+                $join_statement .= " INNER JOIN $join_table ON $table.$join_field = $join_table.$join_primary_key";
+            } else if (array_key_exists($join, $this->model::$belongs_to)) {
+                $join_field = $this->model::$belongs_to[$join];
+                $join_statement .= " LEFT JOIN $join_table ON $table.$join_field = $join_table.$join_primary_key";
+            }
         }
 
-        // has one relation
-        if (in_array($this->join, $this->model::$has_one)) {
-            // $join_field = $this->has_one[$this->join];
-            return " INNER JOIN $join_table ON $table.exercises_id = $join_table.$join_primary_key";
-        }
-
-        if (array_key_exists($this->join, $this->model::$belongs_to)) {
-            $join_field = $this->model::$belongs_to[$this->join];
-            return " LEFT JOIN $join_table ON $table.$join_field = $join_table.$join_primary_key";
-        }
+        return $join_statement;
     }
 
     private function handle_insert_building()
