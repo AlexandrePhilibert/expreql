@@ -25,9 +25,9 @@ class Exercise extends Model
     ];
 
     public static $has_many = [
-        Question::class => 'exercises_id'
+        Question::class => 'exercises_id',
+        Fulfillment::class => 'exercises_id',
     ];
-    
 }
 
 class Question extends Model
@@ -45,6 +45,41 @@ class Question extends Model
 
     public static $has_one = [
         Exercise::class
+    ];
+}
+
+class Fulfillment extends Model
+{
+    public static $table = 'fulfillments';
+
+    public static $primary_key = 'id';
+
+    public static $fields = [
+        'id',
+        'timestamp',
+    ];
+
+    public static $has_one = [
+        Exercise::class => 'exercises_id'
+    ];
+}
+
+class Response extends Model
+{
+    public static $table = 'responses';
+
+    public static $primary_key = 'id';
+
+    public static $fields = [
+        'id',
+        'text',
+        'questions_id',
+        'fulfillments_id',
+    ];
+
+    public static $has_one = [
+        Question::class => 'questions_id',
+        Fulfillment::class => 'fulfillments_id',
     ];
 }
 
@@ -99,6 +134,17 @@ class ModelTest extends TestCase
             ->where(Exercise::field('id'), 14)->execute();
 
         assertCount(0, $exercise[0]->questions);
+    }
+
+    public function testJoinMultipleModels()
+    {
+        $exercise = Exercise::select()->join([
+            Fulfillment::class,
+            Question::class,
+        ])->where(Exercise::field('id'), 1)->execute();
+
+        assertNotNull($exercise[0]->fulfillments);
+        assertNotNull($exercise[0]->questions);
     }
 
     public function testFindExercise()
