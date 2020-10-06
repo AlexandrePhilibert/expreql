@@ -33,6 +33,19 @@ abstract class Model implements Queryable
 	public static $belongs_to = [];
 
 	/**
+	 * @param array $row A PDO result row
+	 */
+	public function __construct(array $row = [])
+	{
+		// Register the columns on the model instance
+		foreach ($row as $column_key => $column_value) {
+			if (in_array($column_key, static::$fields)) {
+				$this->$column_key = $column_value;
+			}
+		}
+	}
+
+	/**
 	 * This function can be used to avoid name collisions on tables columns.
 	 * 
 	 * @param string $field The field of the model colliding

@@ -267,21 +267,14 @@ class QueryBuilder
                         }
                     }
 
-                    $model = new $this->model();
-
-                    foreach ($row as $column_key => $column_value) {
-                        if (!in_array($column_key, $this->model::$fields)) {
-                            continue;
+                    $flatten_row = array_map(function($column) {
+                        if (is_array($column)) {
+                            return $column[0];
                         }
+                        return $column;
+                    }, $row);
 
-                        if (is_array($column_value)) {
-                            // The base model is always index 0 on collisions
-                            $model->$column_key = $column_value[0];
-                        } else {
-                            $model->$column_key = $column_value;
-                        }
-                    }
-
+                    $model = new $this->model($flatten_row);
                     $query_result->append($model);
                 }
 
@@ -331,18 +324,15 @@ class QueryBuilder
                             }
                         }
 
-                        $join_model = new $join();
+                        // flatten the row to remove
+                        $flatten_row = array_map(function($column) use ($join_index) {
+                            if (is_array($column)) {
+                                return $column[$join_index];
+                            }
+                            return $column;
+                        }, $row);
 
-                        foreach ($row as $column_key => $column_value) {
-                            if (!in_array($column_key, $join::$fields)) {
-                                continue;
-                            }
-                            if (is_array($column_value)) {
-                                $join_model->$column_key = $column_value[$join_index];
-                            } else {
-                                $join_model->$column_key = $column_value;
-                            }
-                        }
+                        $join_model = new $join($flatten_row);
 
                         // Joined models should also be a QueryResult in order to
                         // perform methods on them
