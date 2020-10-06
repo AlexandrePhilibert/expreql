@@ -24,12 +24,10 @@ class Exercise extends Model
         'state',
     ];
 
-    public static function has_many()
-    {
-        return [
-            Question::class => 'exercises_id'
-        ];
-    }
+    public static $has_many = [
+        Question::class => 'exercises_id'
+    ];
+    
 }
 
 class Question extends Model
@@ -45,12 +43,9 @@ class Question extends Model
         'exercises_id',
     ];
 
-    public static function has_one()
-    {
-        return [
-            Exercise::class
-        ];
-    }
+    public static $has_one = [
+        Exercise::class
+    ];
 }
 
 

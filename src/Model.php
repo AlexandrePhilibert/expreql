@@ -64,8 +64,6 @@ abstract class Model implements Queryable
 		$query_builder->model(static::class);
 		$query_builder->table(static::$table);
 		$query_builder->fields($fields);
-		$query_builder->has_many(static::has_many());
-		$query_builder->has_one(static::has_one());
 		return $query_builder;
 	}
 
@@ -76,8 +74,6 @@ abstract class Model implements Queryable
 		$query_builder->model(static::class);
 		$query_builder->table(static::$table);
 		$query_builder->where(static::field(static::$primary_key), $value);
-		$query_builder->has_many(static::has_many());
-		$query_builder->has_one(static::has_one());
 		return $query_builder;
 	}
 

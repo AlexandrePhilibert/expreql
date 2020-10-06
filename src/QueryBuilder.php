@@ -48,12 +48,6 @@ class QueryBuilder
 
     private $offset;
 
-    private $has_many;
-
-    private $has_one;
-
-    private $belongs_to;
-
     private $join;
 
     /**
@@ -203,42 +197,6 @@ class QueryBuilder
     }
 
     /**
-     * @param $classes
-     * 
-     * @return QueryBuilder
-     */
-    public function has_many($classes = [])
-    {
-        $this->has_many = $classes;
-
-        return $this;
-    }
-
-    /**
-     * @param $classes
-     * 
-     * @return QueryBuilder
-     */
-    public function has_one($classes = [])
-    {
-        $this->has_one = $classes;
-
-        return $this;
-    }
-
-    /**
-     * @param $classes
-     * 
-     * @return QueryBuilder
-     */
-    public function belongs_to($classes = [])
-    {
-        $this->belongs_to = $classes;
-
-        return $this;
-    }
-
-    /**
      * @param $class The fully qualified class name
      * 
      * example: User::class
@@ -325,7 +283,7 @@ class QueryBuilder
 
                 // Get the foregin key to map the base model primary key to
                 // the join model foreign key
-                $foreign_key = $this->model::has_many()[$this->join];
+                $foreign_key = $this->model::$has_many[$this->join];
                 $primary_key = $this->model::$primary_key;
                 $join_table_name = $this->join::$table;
 
@@ -522,20 +480,20 @@ class QueryBuilder
         $join_primary_key = $join_class->getStaticPropertyValue('primary_key');
 
         // has many relation
-        if (array_key_exists($this->join, $this->has_many)) {
-            $join_field = $this->has_many[$this->join];
+        if (array_key_exists($this->join, $this->model::$has_many)) {
+            $join_field = $this->model::$has_many[$this->join];
             // TODO: Is there a better way to do this ?
             return " LEFT JOIN $join_table ON $table.$join_primary_key = $join_table.$join_field";
         }
 
         // has one relation
-        if (in_array($this->join, $this->has_one)) {
+        if (in_array($this->join, $this->model::$has_one)) {
             // $join_field = $this->has_one[$this->join];
             return " INNER JOIN $join_table ON $table.exercises_id = $join_table.$join_primary_key";
         }
 
-        if (array_key_exists($this->join, $this->belongs_to)) {
-            $join_field = $this->belongs_to[$this->join];
+        if (array_key_exists($this->join, $this->model::$belongs_to)) {
+            $join_field = $this->model::$belongs_to[$this->join];
             return " LEFT JOIN $join_table ON $table.$join_field = $join_table.$join_primary_key";
         }
     }
