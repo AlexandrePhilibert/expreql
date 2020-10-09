@@ -18,12 +18,11 @@ class Exercise extends Model
  
     public static $primary_key = 'id';
 
-      protected static function has_many() {
-        return [
-            // foreign key mapping the Question model to `exercises_id`
-            Question::class => 'exercises_id'
-        ];
-    }
+    public static $has_many = [
+        // foreign key mapping the Question model to `exercises_id`
+        Question::class => 'exercises_id'
+    ];
+    
 }
 ```
 
