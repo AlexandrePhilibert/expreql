@@ -86,11 +86,19 @@ class Response extends Model
 
 class ModelTest extends TestCase
 {
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
         $config = parse_ini_file("config.ini");
 
         Database::set_config($config);
+        $connection = Database::get_connection();
+
+        $schema_query = file_get_contents("./data/tests_schema.sql");
+        $connection->query($schema_query);
+
+        $data_query = file_get_contents("./data/tests_data.sql");
+        $connection->query($data_query);
+
     }
 
     public function testSimpleSelect()
