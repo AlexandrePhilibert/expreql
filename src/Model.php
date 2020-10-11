@@ -60,8 +60,8 @@ abstract class Model implements Queryable
 	public static function insert(array $fields)
 	{
 		$connection = Database::get_connection();
-		$query_builder = new QueryBuilder(QueryType::INSERT, $connection);
-		$query_builder->table(static::$table);
+		$query_builder = new QueryBuilder(InsertQuery::class, $connection);
+		$query_builder->base_model(static::$table);
 		$query_builder->fields($fields);
 		return $query_builder->execute();
 	}
@@ -69,9 +69,8 @@ abstract class Model implements Queryable
 	public static function select(array $fields = null)
 	{
 		$connection = Database::get_connection();
-		$query_builder = new QueryBuilder(QueryType::SELECT, $connection);
-		$query_builder->model(static::class);
-		$query_builder->table(static::$table);
+		$query_builder = new QueryBuilder(SelectQuery::class, $connection);
+		$query_builder->base_model(static::class);
 		$query_builder->fields($fields);
 		return $query_builder;
 	}
@@ -79,9 +78,8 @@ abstract class Model implements Queryable
 	public static function find($value)
 	{
 		$connection = Database::get_connection();
-		$query_builder = new QueryBuilder(QueryType::SELECT, $connection);
-		$query_builder->model(static::class);
-		$query_builder->table(static::$table);
+		$query_builder = new QueryBuilder(SelectQuery::class, $connection);
+		$query_builder->base_model(static::class);
 		$query_builder->where(static::field(static::$primary_key), $value);
 		return $query_builder;
 	}
@@ -89,8 +87,8 @@ abstract class Model implements Queryable
 	public static function update(array $fields)
 	{
 		$connection = Database::get_connection();
-		$query_builder = new QueryBuilder(QueryType::UPDATE, $connection);
-		$query_builder->table(static::$table);
+		$query_builder = new QueryBuilder(UpdateQuery::class, $connection);
+		$query_builder->base_model(static::$table);
 		$query_builder->fields($fields);
 		return $query_builder;
 	}
@@ -98,8 +96,8 @@ abstract class Model implements Queryable
 	public static function delete()
 	{
 		$connection = Database::get_connection();
-		$query_builder = new QueryBuilder(QueryType::DELETE, $connection);
-		$query_builder->table(static::$table);
+		$query_builder = new QueryBuilder(DeleteQuery::class, $connection);
+		$query_builder->base_model(static::$table);
 		return $query_builder;
 	}
 }
