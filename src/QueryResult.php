@@ -77,12 +77,12 @@ class QueryResult extends ArrayObject
                     continue;
                 }
                 // We want to set the base model as a property of the base model
-                // if (is_array($join)) {
+                if (is_array($join)) {
 
-                // } else {
+                } else {
                 // Find the base model to which we will be adding joined object
                 $base_model = $this->get_base_model($row, $join);
-                // }
+                }
 
 
                 // flatten the row to remove
