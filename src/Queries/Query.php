@@ -97,7 +97,7 @@ abstract class Query
         $table = $this->get_base_table_name();
         $join_statement = "";
 
-        foreach ($this->join as $join) {
+        foreach ($this->joins as $join) {
             $join_class = new ReflectionClass($join);
             $join_table = $join_class->getStaticPropertyValue('table');
             $join_primary_key = $join_class->getStaticPropertyValue('primary_key');

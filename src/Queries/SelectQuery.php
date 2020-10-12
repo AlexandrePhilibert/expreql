@@ -60,7 +60,7 @@ class SelectQuery extends Query
 
         $query .= " FROM $table";
 
-        if (isset($this->join)) {
+        if (isset($this->joins)) {
             $query .= $this->build_join_clause();
         }
 
