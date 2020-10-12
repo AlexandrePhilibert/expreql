@@ -98,7 +98,6 @@ class ModelTest extends TestCase
 
         $data_query = file_get_contents("./data/tests_data.sql");
         $connection->query($data_query);
-
     }
 
     public function testSimpleSelect()
@@ -116,7 +115,7 @@ class ModelTest extends TestCase
     public function testJoinMany()
     {
         $exercise_with_question = Exercise::select()->join(Question::class)
-            ->where('exercises.id', 1)->execute();
+            ->where('exercises.id', 2)->execute();
 
         assertNotNull($exercise_with_question);
     }
@@ -130,7 +129,7 @@ class ModelTest extends TestCase
 
     public function testCountExerciseQuestions()
     {
-        $exercise = Exercise::select()->where(Exercise::field('id'), 1)
+        $exercise = Exercise::select()->where(Exercise::field('id'), 2)
             ->join(Question::class)->execute();
 
         assertIsInt($exercise[0]->questions->count());
@@ -139,7 +138,7 @@ class ModelTest extends TestCase
     public function testJoinWithNoJoinedRows()
     {
         $exercise = Exercise::select()->join(Question::class)
-            ->where(Exercise::field('id'), 14)->execute();
+            ->where(Exercise::field('id'), 1)->execute();
 
         assertCount(0, $exercise[0]->questions);
     }
@@ -149,7 +148,7 @@ class ModelTest extends TestCase
         $exercise = Exercise::select()->join([
             Fulfillment::class,
             Question::class,
-        ])->where(Exercise::field('id'), 1)->execute();
+        ])->where(Exercise::field('id'), 8)->execute();
 
         assertNotNull($exercise[0]->fulfillments);
         assertNotNull($exercise[0]->questions);
