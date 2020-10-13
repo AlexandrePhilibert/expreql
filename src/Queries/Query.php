@@ -3,7 +3,6 @@
 namespace Expreql\Expreql;
 
 use PDOStatement;
-use ReflectionClass;
 
 abstract class Query
 {
@@ -92,29 +91,70 @@ abstract class Query
         return $where;
     }
 
+    private function create_join_statement(string $base_model, string $join_model): string
+    {
+        $base_table = $base_model::$table;
+        $base_pk = $base_model::$primary_key;
+        $join_table = $join_model::$table;
+        $join_pk = $this->get_foreign_key($base_model, $join_model);
+
+        return " LEFT JOIN $join_table ON $base_table.$base_pk = $join_table.$join_pk";
+    }
+
+    /**
+     * Build the join clause using the associations defined in the models and 
+     * the structure of the used join array
+     * 
+     * @return string
+     */
     protected function build_join_clause(): string
     {
-        $table = $this->get_base_table_name();
         $join_statement = "";
 
         foreach ($this->joins as $join) {
-            $join_class = new ReflectionClass($join);
-            $join_table = $join_class->getStaticPropertyValue('table');
-            $join_primary_key = $join_class->getStaticPropertyValue('primary_key');
+            if (is_array($join)) {
+                // Join the parent model of the nested model first as the joined
+                // table could be used in another join statement
+                $join_statement .= $this->create_join_statement($this->base_model, $join[0]);
 
-            if (array_key_exists($join, $this->base_model::$has_many)) {
-                $join_field = $this->base_model::$has_many[$join];
-                $join_statement .= " LEFT JOIN $join_table ON $table.$join_primary_key = $join_table.$join_field";
-            } else if (array_key_exists($join, $this->base_model::$has_one)) {
-                $join_field = $this->base_model::$primary_key;
-                $join_statement .= " INNER JOIN $join_table ON $table.$join_field = $join_table.$join_primary_key";
-            } else if (array_key_exists($join, $this->base_model::$belongs_to)) {
-                $join_field = $this->base_model::$belongs_to[$join];
-                $join_statement .= " LEFT JOIN $join_table ON $table.$join_field = $join_table.$join_primary_key";
+                foreach ($join[1] as $nested_join) {
+                    $join_pk = $this->get_foreign_key($join[0], $nested_join);
+                    // It might happen that no association was found between the
+                    // nested base model and the nested model, in this case use
+                    // the base model to perform the join
+                    if (!isset($join_pk)) {
+                        $join_statement .= $this->create_join_statement($this->base_model, $nested_join);
+                    } else {
+                        $join_statement .= $this->create_join_statement($join[0], $nested_join);
+                    }
+                }
+            } else {
+                $join_statement .= $this->create_join_statement($this->base_model, $join);
             }
         }
 
         return $join_statement;
+    }
+
+    /**
+     * Get the foreign key of the association between the two given models
+     * 
+     * @param string $base_model    The model in which to search associations
+     * @param string $join_model    The model to search in the base_model
+     * 
+     * @return string|null
+     */
+    private function get_foreign_key(string $base_model, string $join_model): ?string
+    {
+        if (array_key_exists($join_model, $base_model::$has_one)) {
+            return $base_model::$has_one[$join_model];
+        }
+
+        if (array_key_exists($join_model, $base_model::$has_many)) {
+            return $base_model::$has_many[$join_model];
+        }
+
+        return null;
     }
 
     /**
@@ -126,7 +166,8 @@ abstract class Query
     {
         if (isset($this->table)) {
             return $this->table;
-        } 
+        }
+
         return $this->base_model::$table;
     }
 }
