@@ -111,21 +111,22 @@ abstract class Query
     {
         $join_statement = "";
 
-        foreach ($this->joins as $join) {
-            if (is_array($join)) {
+        foreach ($this->joins as $key => $join) {
+            // We have a nested model
+            if (!is_numeric($key)) {
                 // Join the parent model of the nested model first as the joined
                 // table could be used in another join statement
-                $join_statement .= $this->create_join_statement($this->base_model, $join[0]);
+                $join_statement .= $this->create_join_statement($this->base_model, $key);
 
-                foreach ($join[1] as $nested_join) {
-                    $join_pk = $this->get_foreign_key($join[0], $nested_join);
+                foreach ($join as $nested_join) {
+                    $join_pk = $this->get_foreign_key($key, $nested_join);
                     // It might happen that no association was found between the
                     // nested base model and the nested model, in this case use
                     // the base model to perform the join
                     if (!isset($join_pk)) {
                         $join_statement .= $this->create_join_statement($this->base_model, $nested_join);
                     } else {
-                        $join_statement .= $this->create_join_statement($join[0], $nested_join);
+                        $join_statement .= $this->create_join_statement($key, $nested_join);
                     }
                 }
             } else {

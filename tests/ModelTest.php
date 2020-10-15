@@ -148,7 +148,10 @@ class ModelTest extends TestCase
         $exercise = Exercise::select()->join([
             Fulfillment::class,
             Question::class,
-        ])->where(Exercise::field('id'), 8)->execute();
+            Fulfillment::class  => [
+                Response::class,
+            ]
+        ])->execute();
 
         assertNotNull($exercise[0]->fulfillments);
         assertNotNull($exercise[0]->questions);
