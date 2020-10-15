@@ -98,8 +98,20 @@ class SelectQuery extends Query
             $statement->execute();
         }
 
-        $fetch_result = $statement->fetchAll(PDO::FETCH_NAMED);
+        $result_builder = new ResultBuilder();
 
-        return new QueryResult($fetch_result, $this->base_model, $this->joins);
+        if (!isset($this->joins)) {
+            $model_classes = [
+                $this->base_model
+            ];
+        }    
+
+        // Build the structure of the model classes used for this query.
+        // We cannot unpack the $this->joins array as it contains string keys.
+        foreach ($this->joins as $join_key => $join_array) {
+            $model_classes[$this->base_model][$join_key] = $join_array;
+        }
+
+        return $result_builder->get_query_result($statement, $model_classes);
     }
 }
