@@ -2,7 +2,6 @@
 
 namespace Expreql\Expreql;
 
-use PDO;
 use PDOStatement;
 
 class SelectQuery extends Query
@@ -11,9 +10,9 @@ class SelectQuery extends Query
     /**
      * The fields being selected 
      * 
-     * @var array
+     * @var array|null
      */
-    public? array $fields;
+    public ?array $fields;
 
     /**
      * @var int
@@ -60,7 +59,7 @@ class SelectQuery extends Query
 
         $query .= " FROM $table";
 
-        if (isset($this->joins)) {
+        if (count($this->joins) > 0) {
             $query .= $this->build_join_clause();
         }
 
@@ -88,7 +87,7 @@ class SelectQuery extends Query
         return $this->connection->prepare($query);
     }
 
-    public function execute(): QueryResult
+    public function execute()
     {
         $statement = $this->build();
 
@@ -100,11 +99,11 @@ class SelectQuery extends Query
 
         $result_builder = new ResultBuilder();
 
-        if (!isset($this->joins)) {
+        if (count($this->joins) == 0) {
             $model_classes = [
-                $this->base_model
+                $this->base_model => []
             ];
-        }    
+        }
 
         // Build the structure of the model classes used for this query.
         // We cannot unpack the $this->joins array as it contains string keys.

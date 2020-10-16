@@ -91,6 +91,15 @@ abstract class Query
         return $where;
     }
 
+    /**
+     * Create a join statement using the base model to get the relation relative
+     * to the join model
+     * 
+     * @param string $base_model  The model on which to join the join model
+     * @param string $join_model  The model to join on the base model
+     * 
+     * @return string
+     */
     private function create_join_statement(string $base_model, string $join_model): string
     {
         $base_table = $base_model::$table;
