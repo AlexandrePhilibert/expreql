@@ -44,7 +44,7 @@ class Question extends Model
     ];
 
     public static $has_one = [
-        Exercise::class
+        Exercise::class => 'exercises_id'
     ];
 }
 
@@ -57,6 +57,10 @@ class Fulfillment extends Model
     public static $fields = [
         'id',
         'timestamp',
+    ];
+
+    public static $has_many = [
+        Response::class => 'fulfillments_id'
     ];
 
     public static $has_one = [
@@ -133,6 +137,7 @@ class ModelTest extends TestCase
             ->join(Question::class)->execute();
 
         assertIsInt($exercise[0]->questions->count());
+        assertEquals(1, $exercise->count(), 'Only one top level model should exist');
     }
 
     public function testJoinWithNoJoinedRows()
@@ -148,19 +153,23 @@ class ModelTest extends TestCase
         $exercise = Exercise::select()->join([
             Fulfillment::class,
             Question::class,
-            Fulfillment::class  => [
-                Response::class,
-            ]
-        ])->execute();
+        ])->where(Exercise::field('id'), 8)->execute();
 
         assertNotNull($exercise[0]->fulfillments);
         assertNotNull($exercise[0]->questions);
     }
 
-    public function testFindExercise()
+    public function testNestedJoin()
     {
-        $exercise = Exercise::find(1)->execute();
+        $exercise = Exercise::select()->join([
+            Question::class,
+            Fulfillment::class  => [
+                Response::class,
+            ]
+        ])->where(Exercise::field('id'), 8)->execute();
 
-        assertEquals($exercise->id, 1);
+        assertNotNull($exercise[0]->fulfillments);
+        assertNotNull($exercise[0]->questions);
+        assertNotNull($exercise[0]->fulfillments[0]->responses);
     }
 }
