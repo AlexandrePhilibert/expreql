@@ -122,4 +122,43 @@ class QueryBuilderTest extends TestCase
             $statement->queryString
         );
     }
+
+    public function testJoin()
+    {
+        $query_builder = new QueryBuilder(SelectQuery::class, $this->pdo);
+        $query_builder->base_model(Exercise::class);
+        $query_builder->join([Question::class]);
+        $query_builder->where(Exercise::field('id'), 8);
+        $statement = $query_builder->build();
+
+        $this->assertEquals(
+            "SELECT * FROM exercises " .
+                "LEFT JOIN questions ON exercises.id = questions.exercises_id " .
+                "WHERE exercises.id = ?",
+            $statement->queryString
+        );
+    }
+
+    public function testNestedJoins()
+    {
+        $query_builder = new QueryBuilder(SelectQuery::class, $this->pdo);
+        $query_builder->base_model(Exercise::class);
+        $query_builder->join([
+            Question::class,
+            Fulfillment::class => [
+                Response::class,
+            ]
+        ]);
+        $query_builder->where(Exercise::field('id'), 8);
+        $statement = $query_builder->build();
+
+        $this->assertEquals(
+            "SELECT * FROM exercises " .
+                "LEFT JOIN questions ON exercises.id = questions.exercises_id " .
+                "LEFT JOIN fulfillments ON exercises.id = fulfillments.exercises_id " .
+                "LEFT JOIN responses ON fulfillments.id = responses.fulfillments_id " .
+                "WHERE exercises.id = ?",
+            $statement->queryString
+        );
+    }
 }
