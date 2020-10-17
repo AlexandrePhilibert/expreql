@@ -17,7 +17,7 @@ interface Queryable
      * @param mixed $id    Find a single record using the primary key
      * 
      */
-    public static function find($value);
+    public static function find_by_pk($primary_key);
 
     /**
      * @param array $fields

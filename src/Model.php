@@ -75,13 +75,16 @@ abstract class Model implements Queryable
 		return $query_builder;
 	}
 
-	public static function find($value)
+	public static function find_by_pk($primary_key): ?Model
 	{
 		$connection = Database::get_connection();
 		$query_builder = new QueryBuilder(SelectQuery::class, $connection);
 		$query_builder->base_model(static::class);
-		$query_builder->where(static::field(static::$primary_key), $value);
-		return $query_builder;
+		$query_builder->where(static::field(static::$primary_key), $primary_key);
+		$query_builder->fields(static::$fields);
+		$result = $query_builder->execute();
+
+		return $result[0];
 	}
 
 	public static function update(array $fields)
