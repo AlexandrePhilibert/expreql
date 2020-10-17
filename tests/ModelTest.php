@@ -182,4 +182,13 @@ class ModelTest extends TestCase
 
         assertEquals(22, $exercise->id);
     }
+    
+    public function testFindByPk()
+    {
+        $exercise = Exercise::find_by_pk(19);
+
+        assertEquals(19, $exercise->id);
+        assertEquals('Exercise 19', $exercise->title);
+        assertEquals('closed', $exercise->state);
+    }
 }
