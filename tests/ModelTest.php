@@ -172,4 +172,14 @@ class ModelTest extends TestCase
         assertNotNull($exercise[0]->questions);
         assertNotNull($exercise[0]->fulfillments[0]->responses);
     }
+
+    public function testSaveModel()
+    {
+        $exercise = new Exercise();
+        $exercise->title = 'Exercise 22';
+        $exercise->state = 'building';
+        $exercise->save();
+
+        assertEquals(22, $exercise->id);
+    }
 }
