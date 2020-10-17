@@ -100,4 +100,29 @@ abstract class Model implements Queryable
 		$query_builder->base_model(static::$table);
 		return $query_builder;
 	}
+
+	/**
+	 * Persist the instance to the database
+	 */
+	public function save()
+	{
+		$connection = Database::get_connection();
+		$query_builder = new QueryBuilder(InsertQuery::class, $connection);
+		$query_builder->base_model(static::class);
+
+		$fields = [];
+
+		foreach (static::$fields as $field) {
+			if (isset($this->$field)) {
+				$fields[$field] = $this->$field;
+			}
+		}
+
+		$query_builder->fields($fields);
+		$result = $query_builder->execute();
+
+		foreach ($result[0] as $key => $value) {
+			$this->$key = $value;
+		}
+	}
 }

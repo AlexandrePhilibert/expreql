@@ -35,7 +35,7 @@ class InsertQuery extends Query
         );
     }
 
-    public function execute(): int
+    public function execute(): array
     {
         $statement = $this->build();
 
@@ -45,11 +45,13 @@ class InsertQuery extends Query
             $statement->execute();
         }
 
-        $stmt = $this->pdo->prepare(
-            "SELECT * FROM `" . $this->table . "` WHERE id = ?"
+        $table = $this->get_base_table_name();
+
+        $stmt = $this->connection->prepare(
+            "SELECT * FROM `" . $table . "` WHERE id = ?"
         );
 
-        $stmt->execute([$this->pdo->lastInsertID()]);
+        $stmt->execute([$this->connection->lastInsertID()]);
         return $stmt->fetchAll(PDO::FETCH_CLASS);
     }
 }
