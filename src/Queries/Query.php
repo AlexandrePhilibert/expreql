@@ -138,9 +138,11 @@ abstract class Query
             }
 
             if (is_numeric($key)) {
+                // We are currently in an arry of models to join on the base model
                 $join_statement .= $this->create_join_statement($base_model, $join);
-                $base_model = $join;
             } else {
+                // We will be entering a new sub array the next iteration, set
+                // the $base_model for the next iterations
                 $join_statement .= $this->create_join_statement($base_model, $key);
                 $base_model = $key;
             }
