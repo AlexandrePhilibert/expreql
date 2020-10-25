@@ -3,6 +3,8 @@
 namespace Expreql\Expreql;
 
 use PDOStatement;
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
 
 abstract class Query
 {
@@ -107,6 +109,9 @@ abstract class Query
         $join_table = $join_model::$table;
         $join_pk = $this->get_foreign_key($base_model, $join_model);
 
+        // TODO: We need to get the relation between the two models
+
+        
         return " LEFT JOIN $join_table ON $base_table.$base_pk = $join_table.$join_pk";
     }
 
@@ -120,26 +125,24 @@ abstract class Query
     {
         $join_statement = "";
 
-        foreach ($this->joins as $key => $join) {
-            // We have a nested model
-            if (!is_numeric($key)) {
-                // Join the parent model of the nested model first as the joined
-                // table could be used in another join statement
-                $join_statement .= $this->create_join_statement($this->base_model, $key);
+        $arrayIterator = new RecursiveArrayIterator($this->joins);
+        $recursiveIterator = new RecursiveIteratorIterator($arrayIterator, RecursiveIteratorIterator::SELF_FIRST);
 
-                foreach ($join as $nested_join) {
-                    $join_pk = $this->get_foreign_key($key, $nested_join);
-                    // It might happen that no association was found between the
-                    // nested base model and the nested model, in this case use
-                    // the base model to perform the join
-                    if (!isset($join_pk)) {
-                        $join_statement .= $this->create_join_statement($this->base_model, $nested_join);
-                    } else {
-                        $join_statement .= $this->create_join_statement($key, $nested_join);
-                    }
-                }
+        $base_model = $this->base_model;
+
+        foreach ($recursiveIterator as $key => $join) {
+            // When the base model equals the join model we arrived at the end
+            // of the nested array structure
+            if ($base_model == $join) {
+                continue;
+            }
+
+            if (is_numeric($key)) {
+                $join_statement .= $this->create_join_statement($base_model, $join);
+                $base_model = $join;
             } else {
-                $join_statement .= $this->create_join_statement($this->base_model, $join);
+                $join_statement .= $this->create_join_statement($base_model, $key);
+                $base_model = $key;
             }
         }
 
