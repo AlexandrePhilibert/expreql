@@ -2,6 +2,7 @@
 
 namespace Expreql\Expreql;
 
+use Exception;
 use PDOStatement;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
@@ -105,14 +106,21 @@ abstract class Query
     private function create_join_statement(string $base_model, string $join_model): string
     {
         $base_table = $base_model::$table;
-        $base_pk = $base_model::$primary_key;
         $join_table = $join_model::$table;
-        $join_pk = $this->get_foreign_key($base_model, $join_model);
 
-        // TODO: We need to get the relation between the two models
+        if (array_key_exists($join_model, $base_model::$has_one)) {
+            $base_pk = $base_model::$has_one[$join_model];
+            $join_pk = $join_model::$primary_key;
 
-        
-        return " LEFT JOIN $join_table ON $base_table.$base_pk = $join_table.$join_pk";
+            return " LEFT JOIN $join_table ON $base_table.$base_pk = $join_table.$join_pk";
+        } else if (array_key_exists($join_model, $base_model::$has_many)) {
+            $base_pk = $base_model::$primary_key;
+            $join_pk = $base_model::$has_many[$join_model];
+
+            return " LEFT JOIN $join_table ON $base_table.$base_pk = $join_table.$join_pk";
+        } else {
+            throw new Exception('No relations were found');
+        }
     }
 
     /**
@@ -149,27 +157,6 @@ abstract class Query
         }
 
         return $join_statement;
-    }
-
-    /**
-     * Get the foreign key of the association between the two given models
-     * 
-     * @param string $base_model    The model in which to search associations
-     * @param string $join_model    The model to search in the base_model
-     * 
-     * @return string|null
-     */
-    private function get_foreign_key(string $base_model, string $join_model): ?string
-    {
-        if (array_key_exists($join_model, $base_model::$has_one)) {
-            return $base_model::$has_one[$join_model];
-        }
-
-        if (array_key_exists($join_model, $base_model::$has_many)) {
-            return $base_model::$has_many[$join_model];
-        }
-
-        return null;
     }
 
     /**
