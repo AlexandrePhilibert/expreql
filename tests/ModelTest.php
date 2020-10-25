@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertEquals;
+use function PHPUnit\Framework\assertInstanceOf;
 use function PHPUnit\Framework\assertIsInt;
 use function PHPUnit\Framework\assertNotNull;
 
@@ -41,6 +42,10 @@ class Question extends Model
         'label',
         'type',
         'exercises_id',
+    ];
+
+    public static $has_many = [
+        Response::class => 'questions_id'
     ];
 
     public static $has_one = [
@@ -173,6 +178,20 @@ class ModelTest extends TestCase
         assertNotNull($exercise[0]->fulfillments[0]->responses);
     }
 
+    public function testNestedJoinThreeLevelsDeep()
+    {
+        $exercise = Exercise::select()->join([
+            Fulfillment::class => [
+                Response::class => [
+                    Question::class
+                ]
+            ]
+        ])->where(Exercise::field('id'), 8)->execute();
+
+        assertInstanceOf(Question::class, $exercise[0]->fulfillments[0]->responses[1]->questions[0]);
+        assertEquals(1, $exercise[0]->fulfillments[0]->responses[1]->questions->count(), 'Response contains a single question object');
+    }
+
     public function testSaveModel()
     {
         $exercise = new Exercise();
@@ -182,7 +201,7 @@ class ModelTest extends TestCase
 
         assertEquals(22, $exercise->id);
     }
-    
+
     public function testFindByPk()
     {
         $exercise = Exercise::find_by_pk(19);
