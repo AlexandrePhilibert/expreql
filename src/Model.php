@@ -61,7 +61,7 @@ abstract class Model implements Queryable
 	{
 		$connection = Database::get_connection();
 		$query_builder = new QueryBuilder(InsertQuery::class, $connection);
-		$query_builder->base_model(static::$table);
+		$query_builder->base_model(static::class);
 		$query_builder->fields($fields);
 		return $query_builder->execute();
 	}
@@ -91,7 +91,7 @@ abstract class Model implements Queryable
 	{
 		$connection = Database::get_connection();
 		$query_builder = new QueryBuilder(UpdateQuery::class, $connection);
-		$query_builder->base_model(static::$table);
+		$query_builder->base_model(static::class);
 		$query_builder->fields($fields);
 		return $query_builder;
 	}
@@ -100,7 +100,7 @@ abstract class Model implements Queryable
 	{
 		$connection = Database::get_connection();
 		$query_builder = new QueryBuilder(DeleteQuery::class, $connection);
-		$query_builder->base_model(static::$table);
+		$query_builder->base_model(static::class);
 		return $query_builder;
 	}
 
