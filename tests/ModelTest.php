@@ -116,6 +116,20 @@ class ModelTest extends TestCase
         assertNotNull($exercises);
     }
 
+    public function testSimpleUpdate()
+    {
+        $affected_rows = Exercise::update([
+            'title' => 'Updated title',
+            'state' => 'closed'
+        ])->where('id', 9)->execute();
+    
+        $exercise = Exercise::select()->where('id', 9)->execute();
+
+        assertEquals(1, $affected_rows);
+        assertEquals('Updated title', $exercise[0]->title);
+        assertEquals('closed', $exercise[0]->state);
+    }
+
     public function testGetFieldWithTableName()
     {
         assertEquals('exercises.title', Exercise::field('title'));
