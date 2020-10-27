@@ -33,6 +33,9 @@ class UpdateQuery extends Query
         return $this->connection->prepare($query);
     }
 
+    /**
+     * @return int  The number of rows affected by the UpdateQuery
+     */
     public function execute(): int
     {
         $statement = $this->build();
@@ -43,11 +46,6 @@ class UpdateQuery extends Query
             $statement->execute();
         }
 
-        $stmt = $this->connection->prepare(
-            "SELECT * FROM `" . $this->table . "` WHERE id = ?"
-        );
-
-        $stmt->execute([$this->connection->lastInsertID()]);
-        return $stmt->fetchAll(PDO::FETCH_CLASS);
+        return $statement->rowCount();
     }
 }
