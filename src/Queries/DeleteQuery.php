@@ -15,7 +15,7 @@ class DeleteQuery extends Query
             $query .= $this->build_where_clause();
         }
 
-        return $this->pdo->prepare($query);
+        return $this->connection->prepare($query);
     }
 
     public function execute(): int
