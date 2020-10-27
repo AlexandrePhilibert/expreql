@@ -30,7 +30,7 @@ class UpdateQuery extends Query
             $query .= $this->build_where_clause();
         }
 
-        return $this->pdo->prepare($query);
+        return $this->connection->prepare($query);
     }
 
     public function execute(): int
@@ -43,11 +43,11 @@ class UpdateQuery extends Query
             $statement->execute();
         }
 
-        $stmt = $this->pdo->prepare(
+        $stmt = $this->connection->prepare(
             "SELECT * FROM `" . $this->table . "` WHERE id = ?"
         );
 
-        $stmt->execute([$this->pdo->lastInsertID()]);
+        $stmt->execute([$this->connection->lastInsertID()]);
         return $stmt->fetchAll(PDO::FETCH_CLASS);
     }
 }
