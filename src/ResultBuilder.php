@@ -99,7 +99,7 @@ class ResultBuilder
                     $maped_values = $this->map_model_class_to_value($column_key, $column_value, $flat_model_classes);
                     $model->$column_key = $maped_values[$model_class];
                 } else {
-                    $model->$column_key = $column_value;
+                    $model->$column_key = htmlspecialchars($column_value);
                 }
             }
 
