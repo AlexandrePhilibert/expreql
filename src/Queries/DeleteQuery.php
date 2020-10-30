@@ -9,7 +9,7 @@ class DeleteQuery extends Query
     public function build(): PDOStatement
     {
         $table = $this->get_base_table_name();
-        $query = "DELETE FROM $table";
+        $query = "DELETE FROM `$table`";
 
         if (isset($this->where)) {
             $query .= $this->build_where_clause();

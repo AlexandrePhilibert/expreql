@@ -57,7 +57,7 @@ class SelectQuery extends Query
             $query = "SELECT *";
         }
 
-        $query .= " FROM $table";
+        $query .= " FROM `$table`";
 
         if (count($this->joins) > 0) {
             $query .= $this->build_join_clause();

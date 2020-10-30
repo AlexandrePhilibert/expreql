@@ -17,7 +17,7 @@ class UpdateQuery extends Query
     public function build(): PDOStatement
     {
         $table = $this->get_base_table_name();
-        $query = "UPDATE $table SET";
+        $query = "UPDATE `$table` SET";
 
         foreach ($this->fields as $key => $value) {
             $this->values[] = $value;

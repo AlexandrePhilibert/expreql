@@ -48,7 +48,7 @@ class InsertQuery extends Query
         $table = $this->get_base_table_name();
 
         $stmt = $this->connection->prepare(
-            "SELECT * FROM `" . $table . "` WHERE id = ?"
+            "SELECT * FROM `$table` WHERE id = ?"
         );
 
         $stmt->execute([$this->connection->lastInsertID()]);
