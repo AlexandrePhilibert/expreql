@@ -36,11 +36,13 @@ Product::insert([
     'storage' => 256
 ]);
 
-// "INSERT INTO products (`name`, `price`, `storage`) VALUES ('apple IPhone 10X', 1100.10, 256)"
+// "INSERT INTO products (`name`, `price`, `storage`) VALUES (?, ?, ?)"
 // Expreql uses prepared statements to prevent against SQL injections
 ```
 
 ### Select query
+
+The returned values are converted using `htmlspecialchars` to prevent XSS injections, you can use `htmlspecialchars_decode` to decode a selected string. Note that this can lead to XSS injections.
 
 ```php
 $books = Book::select([
@@ -48,4 +50,31 @@ $books = Book::select([
     'title',
     'published_year'
 ])->where('published_year', 2018)->execute();
+
+// "SELECT `isbn`, `title`, `published_year` FROM `books` WHERE `published_year` = 2018"
+```
+
+### Update query
+
+The Update query returns the number of affetcted rows
+
+```php
+$nbRowsUpdated = Car::update([
+    'leased' => 1, // 1 equals true
+])->where([
+    ['licence_plate', 'VD9043209'],
+])->execute();
+
+// "UPDATE `cars` SET `leased`=? WHERE `licence_plate`=?"
+```
+
+### Delete query
+
+```php
+$nbRowsDeleted = Article::delete()->where([
+    ['status', 'out_of_stock'],
+    ['quantity', 0],
+])->execute();
+
+// "DELETE FROM `articles` WHERE `status`=? AND `quantity`=?"
 ```
